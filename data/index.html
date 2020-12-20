@@ -1,0 +1,141 @@
+<html>
+	<head>
+		<title>WIFICar Remote</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+  		<link rel="icon" href="data:,">
+  		<link rel="stylesheet" type="text/css" href="style.css">
+  		<script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.8.7/nipplejs.min.js" integrity="sha512-2QIBxhGLw3v4ZmJAziFLqt1HIsz6kgZ0go9c85HIq1vkIri1fK9X5Jmz44/S89LwXFUnlUwNOk7qe/I0SLFPiw==" crossorigin="anonymous"></script>
+		<!-- development version, includes helpful console warnings -->
+		
+	</head>
+	<body>
+		<h1>WiFiCar Remote Control</h1>
+		<section id="joystick">
+			<div id="the-joystick"></div>
+			<progress id="left-engine" value="0" max="100"></progress>
+			<progress id="right-engine" value="0" max="100"></progress>
+		</section>
+		<section id="commands">
+			<button id="cmdStop" onclick='postCommand("MoveStop");'>MoveStop</button>
+			<button id="cmdForward" onclick='postCommand("MoveForward");'>MoveForward</button>
+			<button id="cmdBackward" onclick='postCommand("MoveBackward");'>MoveBackward</button>
+			<button id="cmdLeft" onclick='postCommand("RotateLeft");'>RotateLeft</button>
+			<button id="cmdRight" onclick='postCommand("RotateRight");'>RotateRight</button>
+		</section>
+		<section id="engines">
+			<h2>Engines</h2>
+			<input type="range" min="-1023" max="1023" value="0" id="engine_left">
+			<input type="range" min="-1023" max="1023" value="0" id="engine_right">
+		</section>
+
+		<script>
+			function differential_steer(nJoyX, nJoyY){
+				var fPivYLimit = 0.32;
+							
+				// TEMP VARIABLES
+				var   nMotPremixL;    // Motor (left)  premixed output        (-128..+127)
+				var   nMotPremixR;    // Motor (right) premixed output        (-128..+127)
+				var     nPivSpeed;      // Pivot Speed                          (-128..+127)
+				var   fPivScale;      // Balance scale b/w drive and pivot    (   0..1   )
+
+
+				// Calculate Drive Turn output due to Joystick X input
+				if (nJoyY >= 0) {
+				  // Forward
+				  nMotPremixL = (nJoyX>=0)? 1 : (1 + nJoyX);
+				  nMotPremixR = (nJoyX>=0)? (1 - nJoyX) : 1;
+				} else {
+				  // Reverse
+				  nMotPremixL = (nJoyX>=0)? (1 - nJoyX) : 1;
+				  nMotPremixR = (nJoyX>=0)? 1 : (1 + nJoyX);
+				}
+
+				// Scale Drive output due to Joystick Y input (throttle)
+				nMotPremixL = nMotPremixL * nJoyY;
+				nMotPremixR = nMotPremixR * nJoyY;
+
+				// Now calculate pivot amount
+				// - Strength of pivot (nPivSpeed) based on Joystick X input
+				// - Blending of pivot vs drive (fPivScale) based on Joystick Y input
+				nPivSpeed = nJoyX;
+				fPivScale = (Math.abs(nJoyY)>fPivYLimit)? 0.0 : (1.0 - Math.abs(nJoyY)/fPivYLimit);
+
+				// Calculate final mix of Drive and Pivot
+				return [
+					(1.0-fPivScale)*nMotPremixL + fPivScale*( nPivSpeed),
+					(1.0-fPivScale)*nMotPremixR + fPivScale*(-nPivSpeed)
+				]
+			}
+
+			var direction = {}
+
+			var joystick = nipplejs.create({
+				mode: 'static',
+				position: {left: '50%', top: '50%'},
+		        zone: document.getElementById('the-joystick'),
+		        color: 'var(--primary)',
+		        restOpacity: 1.0
+		    });
+
+
+			joystick.on('move', (event, nipple)=>{
+		    	x = nipple.vector.x;
+		    	y = nipple.vector.y;
+
+		    	direction = {x: x, y: y};
+		    	// console.log(direction, nipple.distance);
+
+		    	let [left, right] = differential_steer(x, y);
+		    	
+		    	document.getElementById("left-engine").value = Math.abs(left*1.1*100);
+				document.getElementById("right-engine").value = Math.abs(right*1.1*100);
+
+				postEngines(left*1024, right*1024);
+		    });
+
+
+
+		    joystick.on('end', ()=>{
+		    	console.log('end');
+		    	postEngines(0,0);
+		    })
+
+
+			// Handle Engines
+			var engine_left = document.getElementById("engine_left");
+			var engine_right = document.getElementById("engine_right");
+			engine_left.addEventListener('input', ()=>{
+				postEngines(engine_left.value, engine_right.value);
+			});
+			engine_right.addEventListener('input', ()=>{
+				postEngines(engine_left.value, engine_right.value);
+			});
+
+			var lastEngineTimestamp = 0;
+			function postEngines(left, right) {
+				console.log("handleEngines:", left, right);
+				var now = Date.now();
+				if (lastEngineTimestamp + 200 < now) {  // orig. 200 ms
+					lastEngineTimestamp = now; 
+					var request = new XMLHttpRequest();
+					request.open('POST', '/engines?left=' + Math.round(left) + "&right=" + Math.round(right), true);
+					request.send(null);
+				}
+			}
+
+			// Handle Commands
+			var lastCommandTimestamp = 0;
+			function postCommand(cmd){
+				console.log("handleCommand: ", cmd);
+				var now = Date.now();
+				if(lastCommandTimestamp+200<now){
+					lastCommandTimestamp = now;
+					var request = new XMLHttpRequest();
+					request.open('POST', '/command?cmd='+cmd)
+					request.send(null);
+				}
+			}
+		</script>
+	</body>
+</html>
+
