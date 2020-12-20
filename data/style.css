@@ -26,8 +26,10 @@ section#commands{
 
     grid-auto-rows: 1fr; /*equal rows*/
     grid-auto-columns: 1fr; /*equal columns*/
+    grid-template-columns: auto auto auto;
 
-    border-radius: 33%;
+    border-radius: 20px;
+    overflow: hidden;
 
     border: 10px solid var(--secondary);
 }
@@ -55,7 +57,7 @@ section#commands>h2{
 	margin-top: 1em;
 }
 
-#cmdForward{
+/*#cmdForward{
 	grid-row: 1;
 	grid-column: 2;
 }
@@ -75,7 +77,7 @@ section#commands>h2{
 #cmdRight{
 	grid-row: 2;
 	grid-column: 3;
-}
+}*/
 
 
 /*engines*/
