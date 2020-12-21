@@ -1,7 +1,7 @@
 ## TODO
--[x] mDNS name
--[ ] AccesPoint Mode
+- [x] mDNS name
+- [ ] AccesPoint Mode
 
 
--[ ] flexible layout: portrait, landscape mode.
--[x] joystick grid buttons style
+- [ ] flexible layout: portrait, landscape mode.
+- [x] joystick grid buttons style
