@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h> 
 #include <ESP8266WebServer.h>
 #include <FS.h>
 
@@ -160,27 +161,31 @@ void setup() {
   MoveStop();
 
   /* WIFI */
+  /* mDNS */
+  // Start the mDNS responder for wificar.local
+  if (!MDNS.begin("wificar")) {             
+    Serial.println("Error setting up MDNS responder!");
+  }
+  Serial.println("mDNS responder started");
+  Serial.println("mDNS name: wificar.local");
+  
+  /* Station Mode */
   // Connect to WiFi network
   // network credentials
   const char* ssid = "wifiitthon-2.4GHz";
   const char* password = "Grimp465M";
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  Serial.println("");
+  Serial.print("Connecting to WiFi: ");
+  Serial.print(ssid);
 
   WiFi.begin(ssid, password);
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("");
-  Serial.println("WiFi connected");
-
-  // Print the IP address
-  Serial.print("Use this URL to connect: ");
-  Serial.print("http://");
-  Serial.print(WiFi.localIP());
-  Serial.println("/");
+  Serial.print("WiFi connected, IP address: ");
+  Serial.println(WiFi.localIP());
 
   /* FILE SYSTEM*/
   // Initialize SPIFFS
@@ -190,8 +195,6 @@ void setup() {
   }
 
   /* SERVER */
-  
-
   server.on("/command", [](){
     String cmd = server.arg("cmd");
     Serial.printf("received command: %s\n", cmd.c_str());

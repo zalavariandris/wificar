@@ -14,9 +14,29 @@
   			main{
   				text-align: center;
   				display: flex;
-  				flex-direction: row;
+  				flex-direction: column;
   				align-items: center;
-  				justify-content: space-around;
+  			}
+
+  			button{
+  				-webkit-appearance: none;
+  				border: none;
+  				background: lightgrey;
+  				margin: 0;
+  				background: rgb(230,230,230);
+  			}
+  			button:hover{
+  				background: rgb(220,220,220);
+  			}
+  			button:active{
+  				background-color: rgb(235,235,235);
+  				outline: none;
+  			}
+  			button:focus{
+  				outline: none;
+  			}
+  			button{
+
   			}
   			.joystick-grid{
   				width: 300px;
@@ -27,6 +47,40 @@
   				grid-auto-rows: 1fr; /*equal rows*/
     			grid-auto-columns: 1fr; /*equal columns*/
   			}
+
+  			.engines{
+  				transform: rotate(270deg);
+  				width: 300px;
+  				height: 300px;
+  			}
+
+			input[type=range]{
+			    -webkit-appearance: none;
+			    width: 300px;
+			    height: 150px;
+			    background-color: rgb(230,230,230);
+			    margin: 0;
+			    border: none;
+			}
+			input[type=range]:focus{
+				outline: none;
+				border: none;
+
+			}
+
+			input[type=range]::-webkit-slider-runnable-track {
+				background-color: rgb(230,230,230);
+				/*height: 30px;*/
+			}
+
+			input[type=range]::-webkit-slider-thumb {
+			    -webkit-appearance: none;
+			    width: 50px;
+			    height: 66%;
+			    background: rgb(0,89, 250);
+			    border-radius: 10px;
+			    box-shadow: -1px 1px 6px rgb(0,0,0,0.3);
+			}
   		</style>
 	</head>
 	<body>
@@ -46,14 +100,16 @@
 					<button onclick='postCommand("MoveBackwardRight");'>BackwardRight</button>
 				</div>
 			</section>
-			<section id="engines">
-				<h2>Engines</h2>
-				<input type="range" min="-1023" max="1023" value="0" id="engine_left"><br/>
-				<input type="range" min="-1023" max="1023" value="0" id="engine_right">
-			</section>
 			<section id="video">
 				<h2>Video</h2>
 				<img style="-webkit-user-select: none;margin: auto;" src="http://192.168.0.33:4747/video" width="610" height="458">
+			</section>
+			<section id="engines">
+				<h2>Engines</h2>
+				<div class="engines">
+					<input type="range" min="-1023" max="1023" value="0" id="engine_left"><br/>
+					<input type="range" min="-1023" max="1023" value="0" id="engine_right">
+				</div>
 			</section>
 		</main>
 		<script>
