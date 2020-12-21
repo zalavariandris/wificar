@@ -1,6 +1,7 @@
 ## TODO
-- mDNS name
-- AccesPoint Mode
-- CSS
-  - flexible layout: portrait, landscape mode.
-  - joystick grid buttons style
+-[x] mDNS name
+-[ ] AccesPoint Mode
+
+
+-[ ] flexible layout: portrait, landscape mode.
+-[x] joystick grid buttons style
