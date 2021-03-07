@@ -1,0 +1,149 @@
+body{
+	/*user-select: none;*/
+}
+/* LAYOUT */
+section#joystick{
+	position: fixed;
+	z-index: 1;
+	user-select: none;
+
+	right: 10vw;
+	bottom: 10vw;
+	width: 35vw;
+	height: 35vw;
+	max-width: 15rem;
+	max-height: 15rem;
+}
+
+section#virtual-car{
+	position: fixed;
+
+	left: 10vw;
+	bottom: 10vw;
+	width: 35vw;
+	height: 35vw;
+	max-width: 15rem;
+	max-height: 15rem;
+}
+
+section#droidcam{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: -1;
+}
+
+section#sensors{
+	text-align: left;
+	position: absolute;
+	left: 0;
+}
+
+/*COMPONENTS*/
+.droidcam img{
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.droidcam .info{
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	color: black;
+	text-shadow: 0.5px 0.5px 0px rgb(255,255,255, 0.4);
+	font-size: 0.6rem;
+	font-style: italic;
+}
+
+.joystick .outer{
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: 10px solid black;
+	box-sizing: border-box;
+	border-radius: 50%;
+	position: relative;
+}
+.joystick .inner{
+	display: block;
+	width: 66%;
+	height: 66%;
+	position: absolute;
+	
+	left: 50%;
+	top: 50%;
+
+	transform: translate(-50%, -50%);
+	box-sizing: border-box;
+
+	background-color: black;
+	border-radius: 50%;
+}
+
+.LED{
+	font-size: 0.6rem;
+	text-shadow: 0.5px 0.5px 0px rgb(255,255,255, 0.4);
+	opacity: 0.8;
+	display: flex;
+}
+
+.LED::before{
+	content: "";
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	background-color: rgb(128,128,128, 0.5);
+	border-radius: 50%;
+	border: transparent 1px solid;
+	/*box-shadow:0px 0px 4px rgba(0,0,0,0.5);*/
+
+	transform: translate(0,0.32em);
+	margin-right: 0.1em;
+
+}
+
+.LED.on::before, .LED:hover::before{
+	background: white;
+	border: 1px solid white;
+	box-shadow:
+	  0 0 10px white,
+	  0 0 3px white;
+}
+
+.LED.red.on::before, .LED.red:hover::before{
+	background: radial-gradient(rgb(255,10,100), red);
+	border: 1px solid rgb(255,100,100);
+	box-shadow:
+	  0 0 10px rgb(255,0,0,0.5),
+	  0 0 3px rgb(255, 100, 100);
+}
+
+.LED.green.on::before, .LED.green:hover::before{
+	background: radial-gradient(lime, lime);
+	border: 1px solid lime;
+	box-shadow:
+	  0 0 10px lime,
+	  0 0 3px lime;
+}
+
+/* THEME */
+body{
+  background: white;
+  font-family: futura;
+}
+
+
+body{
+	
+}
+h1{
+	text-align: center;
+	text-shadow: 1px 1px 1px rgba(255,255,255, 0.4);
+}

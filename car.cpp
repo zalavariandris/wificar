@@ -1,150 +1,88 @@
 #include "car.h"
+#include <numeric>
 
+Car::Car(){
+    LEFT_PWR = D1;
+    LEFT_DIR = D3;
+    RIGHT_PWR = D2;
+    RIGHT_DIR = D4;
+    WALL_SENSOR = D5;
+}
 
-Car::Car(){}
+bool Car::getWallSensor(){
+  return digitalRead(WALL_SENSOR)<1;
+}
+
+CarState Car::getState(){
+  return state;
+}
 
 void Car::setup(){
-    pinMode(D1, OUTPUT);
-    pinMode(D2, OUTPUT);
-    pinMode(D3, OUTPUT);
-    pinMode(D4, OUTPUT);
-    moveStop();
+    pinMode(LEFT_PWR, OUTPUT);
+    pinMode(LEFT_DIR, OUTPUT);
+    pinMode(RIGHT_PWR, OUTPUT);
+    pinMode(RIGHT_DIR, OUTPUT);
+    setEngines(0,0);
+}
+
+void Car::update(){
+  // UPDATE STATE MACHINE
+  if(state==MANUAL){
+    if(false && getWallSensor() && history.size()>0){
+      state=REVERT;
+    }
+  }else if(state==REVERT){
+    if(history.size()>0){
+      auto last_element = history.back();
+      history.pop_back();
+      setEngines(-last_element.first, -last_element.second);
+      delay(10);
+    }else{
+      setEngines(0,0);
+      state=MANUAL;
+    }
+  };
 }
 
 void Car::setEngines(int left, int right){
     /*handling values from -1023 to +1023*/
-    Serial.printf("SetEngines: [%d - %d]\n", left, right);
     // left engine
-    digitalWrite(D3, left < 0 ? LOW : HIGH);
-    analogWrite(D1, abs(left));
+    digitalWrite(LEFT_DIR, left < 0 ? HIGH : LOW);
+    analogWrite(LEFT_PWR, abs(left));
 
     // right engine
-    digitalWrite(D4, right < 0 ? LOW : HIGH);
-    analogWrite(D2, abs(right));
+    digitalWrite(RIGHT_DIR, right < 0 ? HIGH : LOW);
+    analogWrite(RIGHT_PWR, abs(right));
+
+//    Serial.print("setEngines: ");
+//    Serial.print(left);
+//    Serial.print(", ");
+//    Serial.println(right);
 }
 
-void Car::moveForwardLeft(){
-    //left
-    digitalWrite(D3, HIGH);
-    analogWrite(D1, maxSpeed/2);
-    
-    //right
-    digitalWrite(D3, HIGH);
-    analogWrite(D2, maxSpeed);
-}
+void Car::handleMessage(char* msg){
+  if(state==MANUAL){
+    char *ptr = strtok(msg, " ");
+    if(strcmp(ptr, "engines")==0){
+      // Handle driving engines direclty 'engines [left] [right]'
+      // -------------------------------
+  
+      // parse engine values from message
+      ptr = strtok(NULL, " ");
+      int left = atoi(ptr);
+      ptr = strtok(NULL, " ");
+      int right = atoi(ptr);
+  
+      // set the engines
+      setEngines(left, right);
 
-void Car::moveForward(){
-    Serial.println("Car->MoveForward");
-    //left
-    digitalWrite(D3, LOW);
-    analogWrite(D1, maxSpeed);
-    
-    //right
-    digitalWrite(D4, LOW);
-    analogWrite(D2, maxSpeed);
-}
-
-void Car::moveForwardRight(){
-    //left
-    digitalWrite(D3, HIGH);
-    analogWrite(D1, maxSpeed);
-    
-    //right
-    digitalWrite(D4, HIGH);
-    analogWrite(D2, maxSpeed/2);
-}
-
-void Car::rotateLeft(){
-    //left
-    digitalWrite(D3, LOW);
-    analogWrite(D1, maxSpeed);
-
-    // right
-    digitalWrite(D4, HIGH);
-    analogWrite(D2, maxSpeed);
-}
-
-void Car::moveStop(){
-    //left
-    digitalWrite(D3, LOW);
-    analogWrite(D1, 0);
-
-    // right
-    digitalWrite(D4, LOW);
-    analogWrite(D2, 0);
-}
-
-void Car::rotateRight(){
-    //left
-    digitalWrite(D3, HIGH);
-    analogWrite(D1, maxSpeed);
-
-    // right
-    digitalWrite(D4, LOW);
-    analogWrite(D2, maxSpeed);
-}
-
-void Car::moveBackwardLeft(){
-    //left
-    digitalWrite(D3, LOW);
-    analogWrite(D1, maxSpeed/2);
-    
-    //right
-    digitalWrite(D4, LOW);
-    analogWrite(D2, maxSpeed);
-}
-
-void Car::moveBackward(){
-    //left
-    digitalWrite(D3, HIGH);
-    analogWrite(D1, maxSpeed);
-    
-    //right
-    digitalWrite(D4, HIGH);
-    analogWrite(D2, maxSpeed);
-}
-
-void Car::moveBackwardRight(){
-    //left
-    digitalWrite(D3, LOW);
-    analogWrite(D1, maxSpeed);
-    
-    //right
-    digitalWrite(D4, LOW);
-    analogWrite(D2, maxSpeed/2);
-}
-
-bool Car::handleCommand(String command){
-    Serial.print("handleCommand: ");
-    Serial.println(command);
-    if(command=="MoveStop"){
-        moveStop();
-        return true;
-    }else if(command=="MoveForward"){
-        moveForward();
-        return true;
-    }if(command=="MoveForwardLeft"){
-        moveForwardLeft();
-        return true;
-    }if(command=="MoveForwardRight"){
-        moveForwardRight();
-        return true;
-    }if(command=="RotateLeft"){
-        rotateLeft();
-        return true;
-    }if(command=="RotateRight"){
-        rotateRight();
-        return true;
-    }if(command=="MoveBackwardLeft"){
-        moveBackwardLeft();
-        return true;
-    }if(command=="MoveBackward"){
-        moveBackward();
-        return true;
-    }if(command=="MoveBackwardRight"){
-        moveBackwardRight();
-        return true;
-    }else{
-        return false;
+      if(left!=0 || right!=0){
+        std::pair<int, int> new_value{left, right};
+        history.push_back(new_value);
+        if(history.size()>historySize){
+          history.pop_front();
+        }
+      }
     }
+  }
 }

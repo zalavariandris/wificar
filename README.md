@@ -2,9 +2,9 @@
 WiFiCar
 
 ## TODO
-- [x] mDNS name
-- [ ] AccesPoint Mode
-
-
-- [ ] flexible layout: portrait, landscape mode.
-- [x] joystick grid buttons style
+- [x] static IP for droidcam
+- [-] static IP for arduino
+- [x] fluid css layout
+- [-] Wifi manager
+- [-] handle multiple clients
+- [-] Stop client when client not responding

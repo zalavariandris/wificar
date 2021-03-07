@@ -1,192 +1,47 @@
 <html>
 	<head>
-		<title>WIFICar Remote</title>
+		<title>WIFI Car</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
   		<link rel="icon" href="data:,">
-  		<style>
-  			body{
-  				font-family: futura;
-  				
-  			}
-  			h1{
-  				text-align: center;
-  			}
-  			main{
-  				text-align: center;
-  				display: flex;
-  				flex-direction: column;
-  				align-items: center;
-  			}
-
-  			button{
-  				-webkit-appearance: none;
-  				border: none;
-  				background: lightgrey;
-  				margin: 0;
-  				background: rgb(230,230,230);
-  			}
-  			button:hover{
-  				background: rgb(220,220,220);
-  			}
-  			button:active{
-  				background-color: rgb(235,235,235);
-  				outline: none;
-  			}
-  			button:focus{
-  				outline: none;
-  			}
-  			button{
-
-  			}
-  			.joystick-grid{
-  				width: 300px;
-  				height: 300px;
-  				display: grid;
-  				grid-template-columns: auto auto auto;
-  				grid-template-rows: auto auto auto;
-  				grid-auto-rows: 1fr; /*equal rows*/
-    			grid-auto-columns: 1fr; /*equal columns*/
-  			}
-
-  			.engines{
-  				transform: rotate(270deg);
-  				width: 300px;
-  				height: 300px;
-  			}
-
-			input[type=range]{
-			    -webkit-appearance: none;
-			    width: 300px;
-			    height: 150px;
-			    background-color: rgb(230,230,230);
-			    margin: 0;
-			    border: none;
-			}
-			input[type=range]:focus{
-				outline: none;
-				border: none;
-
-			}
-
-			input[type=range]::-webkit-slider-runnable-track {
-				background-color: rgb(230,230,230);
-				/*height: 30px;*/
-			}
-
-			input[type=range]::-webkit-slider-thumb {
-			    -webkit-appearance: none;
-			    width: 50px;
-			    height: 66%;
-			    background: rgb(0,89, 250);
-			    border-radius: 10px;
-			    box-shadow: -1px 1px 6px rgb(0,0,0,0.3);
-			}
-  		</style>
+  		<!-- STYLE CSS -->
+  		<link rel="stylesheet" type="text/css" href="style.css">
+  		<!-- VENDOR JS -->
+  		<script type="text/javascript" src="vendor/three.js"></script>
 	</head>
 	<body>
-		<h1>WiFiCar Remote Control</h1>
+		<h1>WiFi Car</h1>
 		<main>
-			<section id="commands">
-				<h2>Commands</h2>
-				<div class="joystick-grid">
-					<button onclick='postCommand("MoveForwardLeft");'>ForwardLeft</button>
-					<button onclick='postCommand("MoveForward");'>Forward</button>
-					<button onclick='postCommand("MoveForwardRight");'>ForwardRight</button>
-					<button onclick='postCommand("RotateLeft");'>RotateLeft</button>
-					<button onclick='postCommand("MoveStop");'>Stop</button>
-					<button onclick='postCommand("RotateRight");'>RotateRight</button>
-					<button onclick='postCommand("MoveBackwardLeft");'>BackwardLeft</button>
-					<button onclick='postCommand("MoveBackward");'>Backward</button>
-					<button onclick='postCommand("MoveBackwardRight");'>BackwardRight</button>
+			<section class="joystick" id="joystick">
+				<div class="outer">
+					<div class="inner"></div>
 				</div>
 			</section>
-			<section id="video">
-				<h2>Video</h2>
-				<img style="-webkit-user-select: none;margin: auto;" src="http://192.168.0.33:4747/video" width="610" height="458">
+
+			<section id="sensors">
+				<div id="connection-led" class="LED green">connection</div>
+				<div id="wall_sensor" class="LED red">wall</div>
 			</section>
-			<section id="engines">
-				<h2>Engines</h2>
-				<div class="engines">
-					<input type="range" min="-1023" max="1023" value="0" id="engine_left"><br/>
-					<input type="range" min="-1023" max="1023" value="0" id="engine_right">
-				</div>
+			
+			<section class="droidcam" id="droidcam">
+				<img style="-webkit-user-select: none;margin: auto;" src="" width="610" height="458">
+				<span class="info"></span>
+			</section>
+
+			<section id="engines" style="display: none;">
+				<progress id="leftEngine" value="0" max="1024"></progress>
+				<progress id="rightEngine" value="0" max="1024"></progress>
+			</section>
+
+			<section id="virtual-car">
 			</section>
 		</main>
-		<script>
-			/* COMMANDS */
-			var lastCommandTimestamp = 0;
-			function postCommand(cmd){
-				console.log("postCommand: ", cmd);
-				var now = Date.now();
-				// if(lastCommandTimestamp+200<now){
-					// lastCommandTimestamp = now;
-					var request = new XMLHttpRequest();
-					request.open('POST', '/command?cmd='+cmd)
-					request.send(null);
-				// }
-			}
 
-			/* ENGINES */
-			var engine_left = document.getElementById("engine_left");
-			var engine_right = document.getElementById("engine_right");
-			engine_left.addEventListener('input', ()=>{
-				postEngines(engine_left.value, engine_right.value);
-			});
-			engine_right.addEventListener('input', ()=>{
-				postEngines(engine_left.value, engine_right.value);
-			});
-
-			var lastEngineTimestamp = 0;
-			function postEngines(left, right) {
-				console.log("post engines:", left, right);
-				var now = Date.now();
-				if (lastEngineTimestamp + 200 < now) {  // orig. 200 ms
-					lastEngineTimestamp = now; 
-					var request = new XMLHttpRequest();
-					request.open('POST', '/engines?left=' + Math.round(left) + "&right=" + Math.round(right), true);
-					request.send(null);
-				}
-			}
-
-			/* JOYSTICK */
-			function differential_steer(nJoyX, nJoyY){
-				var fPivYLimit = 0.32;
-							
-				// TEMP VARIABLES
-				var   nMotPremixL;    // Motor (left)  premixed output        (-128..+127)
-				var   nMotPremixR;    // Motor (right) premixed output        (-128..+127)
-				var   nPivSpeed;      // Pivot Speed                          (-128..+127)
-				var   fPivScale;      // Balance scale b/w drive and pivot    (   0..1   )
-
-
-				// Calculate Drive Turn output due to Joystick X input
-				if (nJoyY >= 0) {
-				  // Forward
-				  nMotPremixL = (nJoyX>=0)? 1 : (1 + nJoyX);
-				  nMotPremixR = (nJoyX>=0)? (1 - nJoyX) : 1;
-				} else {
-				  // Reverse
-				  nMotPremixL = (nJoyX>=0)? (1 - nJoyX) : 1;
-				  nMotPremixR = (nJoyX>=0)? 1 : (1 + nJoyX);
-				}
-
-				// Scale Drive output due to Joystick Y input (throttle)
-				nMotPremixL = nMotPremixL * nJoyY;
-				nMotPremixR = nMotPremixR * nJoyY;
-
-				// Now calculate pivot amount
-				// - Strength of pivot (nPivSpeed) based on Joystick X input
-				// - Blending of pivot vs drive (fPivScale) based on Joystick Y input
-				nPivSpeed = nJoyX;
-				fPivScale = (Math.abs(nJoyY)>fPivYLimit)? 0.0 : (1.0 - Math.abs(nJoyY)/fPivYLimit);
-
-				// Calculate final mix of Drive and Pivot
-				return [
-					(1.0-fPivScale)*nMotPremixL + fPivScale*( nPivSpeed),
-					(1.0-fPivScale)*nMotPremixR + fPivScale*(-nPivSpeed)
-				]
-			}
-		</script>
+		<!-- SCRIPTS -->
+		<script type="text/javascript" src="src/components/virtual-car.js"></script>
+		<script type="text/javascript" src="src/components/joystick.js"></script>
+		<script type="text/javascript" src="src/components/droidcam.js"></script>
+		
+		<script type="text/javascript" src="src/main.js"></script>
 	</body>
 </html>
 
