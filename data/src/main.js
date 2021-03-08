@@ -10,7 +10,7 @@ function init_ws(){
 	
 	var tm;
 	function ping(){
-		if(ws.readyState == ws.OPEN){{
+		if(ws.readyState == ws.OPEN){
 			ws.send("__ping__")
 		}
 		
@@ -37,7 +37,7 @@ function init_ws(){
 	});
 
 	ws.addEventListener("error", (error)=>{
-		alert('WebSocket Error ', error.toString());
+		console.error('WebSocket Error ', error.toString());
 		let element = document.querySelector("#connection-led")
 		element.classList.remove("on")
 	});
@@ -76,14 +76,13 @@ function init_ws(){
 }
 
 function differential_steer(nJoyX, nJoyY){
-	/* 
-		input values are x, and y axis of direction
-		values are in range -1.0 to 1.0 
-		return values are the strength of the left and right wheels
-		values between -1.0 and 1.0
-		*/
+	// input values are x, and y axis of direction
+	// values are in range -1.0 to 1.0 
+	// return values are the strength of the left and right wheels
+	// values between -1.0 and 1.0
+	
 
-		var fPivYLimit = 0.5;
+	var fPivYLimit = 0.5;
 
 	// TEMP VARIABLES
 	var   nMotPremixL;    // Motor (left)  premixed output        (-128..+127)
@@ -138,11 +137,12 @@ function sendEngines(leftThrottle, rightThrottle){
 	}
 }
 
+
 init_ws()
 joystick = new Joystick("#joystick")
 virtualCar = new VirtualCar("#virtual-car")
 
-joystick.element.addEventListener('input', ()=>{
+joystick.element.addEventListener('input', function(){
 	let x = joystick.element.value.x;
 	let y = joystick.element.value.y;
 
@@ -155,7 +155,7 @@ joystick.element.addEventListener('input', ()=>{
 
 	virtualCar.leftThrottle = leftThrottle
 	virtualCar.rightThrottle = rightThrottle
-	sendEngines(-rightThrottle*1024, -leftThrottle*1024)// backfacing car
+	sendEngines(-rightThrottle*1024, -leftThrottle*1024);// backfacing car
 })
 
 
